@@ -4,10 +4,10 @@ int main(int argc, char* argv[])
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    int screenWidth = 800;
-    int screenHeight = 450;
+    int screenWidth = 900;
+    int screenHeight = 500;
 
-    InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
+    InitWindow(screenWidth, screenHeight, "Raycasting engine -- Raye");
 
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
