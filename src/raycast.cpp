@@ -20,7 +20,6 @@ class Raycast
         void resetScreen(); // draw a rectngle and clear the screen
         float degToRad( int deg ); // deg to rad it is just that
 
-
 };
 
 Raycast::Raycast( Player player , int _screenWidth , int _screenHeight ) {
