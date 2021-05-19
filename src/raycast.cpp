@@ -26,11 +26,11 @@ class Raycast
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,0,0,0,0,1,0,1,4,0,3,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,0,0,0,0,4,3,2,0,4,4,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -42,8 +42,8 @@ class Raycast
 
     public:
         Raycast();
-        Raycast( Player player , int _screenWidth , int _screenHeight ); //constructor of the class
-        void draw( Player player );                                      // draw class that takes a player data
+        Raycast( Player &player , int _screenWidth , int _screenHeight ); //constructor of the class
+        void draw( Player &player );                                      // draw class that takes a player data
         void resetScreen();                                              // draw a rectngle and clear the screen
         float degToRad( int deg );                                       // deg to rad it is just that
         void setMap();
@@ -51,11 +51,11 @@ class Raycast
 };
 
 
-Raycast::Raycast( Player player , int _screenWidth , int _screenHeight ) {
+Raycast::Raycast( Player &player , int _screenWidth , int _screenHeight ) {
 
 }
 
-void Raycast::draw( Player player ) {
+void Raycast::draw( Player &player ) {
 
 }
 

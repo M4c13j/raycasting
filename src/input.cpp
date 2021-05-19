@@ -1,4 +1,4 @@
-#ifndef INPUT_HPP
-#define INPUT_HPP
+#ifndef INPUT_CPP
+#define INPUT_CPP
 
 #endif

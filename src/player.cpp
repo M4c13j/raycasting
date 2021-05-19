@@ -7,14 +7,20 @@
 class Player {
 private:
     int fov;        // field of view
-    int angle;      // angle that player is rotated ( in degrees )
-    int deltaAngle; // change of angle while rotating
+    float angle;      // angle that player is rotated ( in degrees )
+    float deltaAngle; // change of angle while rotating
     
     Vector2 position; // vector representing cordinatess
     float step; // position change distance
     
 public:
+    void move( Vector2 where ); // calculate move, player 
+    Vector2 calculateNextPos( int dir ); // position after move
     
 };
+
+void Player::move( Vector2 where ) {
+
+}
 
 #endif
