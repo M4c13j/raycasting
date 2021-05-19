@@ -1,15 +1,16 @@
 #include "include/raylib.h"
+#include "./src/constants.hpp"
+#include "./src/raycast.cpp"
+#include "./src/player.cpp"
 
 int main(int argc, char* argv[])
 {
-    int screenWidth = 900;
-    int screenHeight = 500;
 
     // class inits
-    
+
     // raylib stuff
-    InitWindow(screenWidth, screenHeight, "Raycasting engine -- Raye");
-    SetTargetFPS(60);
+    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raycasting engine -- Raye");
+    SetTargetFPS(FRAME_LIMIT);
 
 
 

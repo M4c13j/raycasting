@@ -1,3 +1,6 @@
+#ifndef PLAYER_CPP
+#define PLAYER_CPP
+
 #include "raylib.h"
 #include "constants.hpp"
 
@@ -12,3 +15,5 @@ class Player {
 public:
     
 };
+
+#endif
