@@ -1,7 +1,7 @@
 #ifndef RAYCAST_CPP
 #define RAYCAST_CPP
 
-#include "raylib.h"
+#include "../include/raylib.h"
 #include "constants.hpp"
 #include "player.cpp"
 #include <cmath>

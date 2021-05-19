@@ -1,7 +1,7 @@
 #ifndef PLAYER_CPP
 #define PLAYER_CPP
 
-#include "raylib.h"
+#include "../include/raylib.h"
 #include "constants.hpp"
 
 class Player {
