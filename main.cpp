@@ -2,26 +2,24 @@
 
 int main(int argc, char* argv[])
 {
-    // Initialization
-    //--------------------------------------------------------------------------------------
     int screenWidth = 900;
     int screenHeight = 500;
 
+    // class inits
+    
+    // raylib stuff
     InitWindow(screenWidth, screenHeight, "Raycasting engine -- Raye");
-
     SetTargetFPS(60);
-    //--------------------------------------------------------------------------------------
+
+
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        // Update
-        //----------------------------------------------------------------------------------
-        // TODO: Update your variables here
-        //----------------------------------------------------------------------------------
+        // variables etc.
 
-        // Draw
-        //----------------------------------------------------------------------------------
+
+        // Drawing part
         BeginDrawing();
 
         ClearBackground(RAYWHITE);
@@ -29,13 +27,10 @@ int main(int argc, char* argv[])
         DrawText("Sneeeeeeed", 190, 200, 20, LIGHTGRAY);
 
         EndDrawing();
-        //----------------------------------------------------------------------------------
+        // End drawing
     }
 
-    // De-Initialization
-    //--------------------------------------------------------------------------------------   
     CloseWindow();        // Close window and OpenGL context
-    //--------------------------------------------------------------------------------------
 
     return 0;
 }
