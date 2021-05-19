@@ -5,6 +5,7 @@
 #include "constants.hpp"
 
 class Player {
+private:
     int fov;        // field of view
     int angle;      // angle that player is rotated ( in degrees )
     int deltaAngle; // change of angle while rotating
