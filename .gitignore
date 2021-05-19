@@ -32,6 +32,8 @@
 *.app
 
 # ide
-.idea
-.vscode
+.idea/
+.vscode/
+include/
+lib/
 Makefile
