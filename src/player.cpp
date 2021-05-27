@@ -14,8 +14,8 @@ private:
     float step; // position change distance
     
 public:
-    void move( Vector2 where ); // calculate move, player 
-    Vector2 calculateNextPos( float deg ); // position after move
+    void move( Vector2 where ); // move player to 'where'
+    Vector2 calculateNextPos( float deg ); // return position after move
     
 };
 
