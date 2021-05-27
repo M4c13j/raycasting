@@ -15,12 +15,16 @@ private:
     
 public:
     void move( Vector2 where ); // calculate move, player 
-    Vector2 calculateNextPos( int dir ); // position after move
+    Vector2 calculateNextPos( float deg ); // position after move
     
 };
 
 void Player::move( Vector2 where ) {
+    return;
+}
 
+Vector2 Player::calculateNextPos( float deg ) {
+    
 }
 
 #endif
