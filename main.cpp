@@ -2,6 +2,7 @@
 #include "./src/constants.hpp"
 #include "./src/raycast.cpp"
 #include "./src/player.cpp"
+#include "./src/input.cpp"
 
 int main(int argc, char* argv[])
 {
@@ -9,26 +10,26 @@ int main(int argc, char* argv[])
     // class inits
 
     // raylib stuff
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Raycasting engine -- Raye");
-    SetTargetFPS(FRAME_LIMIT);
+    InitWindow( SCREEN_WIDTH , SCREEN_HEIGHT , "Raycasting engine -- Raye");
+    SetTargetFPS( FRAME_LIMIT );
 
-
+    Player player = Player();
+    Raycast raycast = Raycast( 1 );
 
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
-        // variables etc.
 
 
-        // Drawing part
         BeginDrawing();
 
-        ClearBackground(RAYWHITE);
+        readInput( player );
+        raycast.resetScreen();
+        raycast.draw( player );
 
-        DrawText("Sneeeeeeed", 190, 200, 20, LIGHTGRAY);
+        //DrawText("Sneeeeeeed", 400, 0, 40, LIGHTGRAY);
 
         EndDrawing();
-        // End drawing
     }
 
     CloseWindow();        // Close window and OpenGL context
