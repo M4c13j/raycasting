@@ -17,6 +17,11 @@ public:
 };
 
 void Graphics::LoadTextures() {
+    std::string imagesFiles[] = {
+        "../img/skybox.png"
+        };
+    std::string texturesFiles[] = {};
+
     Image image;
     Texture2D texture;
 
