@@ -4,6 +4,7 @@
 #include "../include/raylib.h"
 #include "constants.hpp"
 #include "player.cpp"
+#include "graphics.cpp"
 #include <cmath>
 #include <stdio.h>
 class Raycast 
@@ -27,10 +28,10 @@ class Raycast
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,2,0,0,0,0,4,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,3,0,2,4,0,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,4,3,2,3,4,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,6,0,0,0,0,2,0,0,0,0,4,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,6,0,0,0,0,3,0,2,4,0,3,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,6,6,0,0,0,4,3,2,3,4,3,0,0,0,0,0,0,0,1},
+            {1,0,0,0,0,0,6,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
@@ -40,13 +41,13 @@ class Raycast
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}};
 
         Color colors[6] = {GREEN,BLUE,YELLOW,RED,PINK,WHITE}; // colors for map ( primitive textures )
-
+        Graphics graphics;
 
         Raycast( float scale); // constructor
-        void drawSegment( int x, int len , Color color ); // draw 1 line on the screen
+        void drawSegment( int x, int len , int type ); // draw 1 line on the screen
         void ray( int x , Player &player); // calculate segment
         void draw( Player &player );                                      // draw class that takes a player data
-        void resetScreen();                                              // draw a rectngle and clear the screen
+        void resetScreen( );                                              // draw a rectngle and clear the screen
         void drawMap( Player &player);
         void setMap();
 
@@ -60,8 +61,17 @@ Raycast::Raycast( float _scale ) {
     scale = _scale;
 }
 
-void Raycast::drawSegment( int x, int len , Color color ) {
-    DrawRectangle( x , SCREEN_HEIGHT/2 - len/2 , 1, len , color );
+void Raycast::drawSegment( int x, int len , int type ) {
+    Color color = colors[type];
+    // if( side ) {
+    //     color.r /= 2;
+    //     color.g /= 2;
+    //     color.b /= 2;
+    // }
+    if( type < 6 ) DrawRectangle( x , SCREEN_HEIGHT/2 - len/2 , 1, len , color );
+    else {
+
+    }
 }
 
 
@@ -117,9 +127,8 @@ void Raycast::ray( int i , Player &player ) {
 
     //DrawLine( player.position.x*20 , player.position.y*20 , mapX*20 , mapY*20 , RED );
     
-    Color color = colors[mapa[mapY][mapX]-1];
-    if( side ) color.a/=2;
-    drawSegment( i , len , color );
+    
+    drawSegment( i , len , mapa[mapY][mapX] );
 }
 
 
@@ -142,10 +151,16 @@ void Raycast::drawMap( Player &player ) {
 }
 
 void Raycast::resetScreen() {
+    //single color background
     ClearBackground( BLACK );
-    // in the future:
-    // 2 rectangles
-    // skybox
+    
+    // duochromatic background
+    //DrawRectangle( 0 , 0 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , BLACK ); 
+    //DrawRectangle( 0 , SCREEN_HEIGHT / 2 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , GRAY );
+    
+    // Image background
+    DrawTexture( graphics.images[0] , 0 , 0 , WHITE );
+
 }
 
 void Raycast::setMap() {

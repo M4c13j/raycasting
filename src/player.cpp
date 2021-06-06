@@ -3,62 +3,46 @@
 
 #include "../include/raylib.h"
 #include "constants.hpp"
-
+#include <math.h>
+#include <string>
 class Player {
-<<<<<<< HEAD
 public:
     int fov = 90;        // field of view
-    float angle=90;      // angle that player is rotated ( in degrees )
-    float deltaAngle=1; // change of angle while rotating
-    
-    Vector2 position = {12,12}; // vector representing cordinatess
-    float step; // position change distance
-=======
-private:
-    int fov;        // field of view
-    double angle;      // angle that player is rotated ( in degrees )
+    double angle=90;      // angle that player is rotated ( in degrees )
     double deltaAngle=1; // change of angle while rotating
     
-    Vector2 position; // vector representing cordinatess
-    float step_sis; // position change distance
->>>>>>> e0dc471c851a5318144607a4015abc0343c79c61
+    Vector2 position = {12,12}; // vector representing cordinatess
+    double step = 0.01f; // position change distance
     
-    void move( Vector2 where ); // move player to 'where'
-<<<<<<< HEAD
+    Vector2 move( float dang ); // move player to 'where'
     void rotate( int dang ); // roate player
-    Vector2 calculateNextPos( float deg ); // return position after move
+    void info();
 
 };
 
 void Player::rotate( int dang ) {
     angle += deltaAngle * dang;
-=======
-    Vector2 calculateNextPos(  ); // return position after move
+    //if( angle < 0 ) angle += 360;
+    //if( angle >= 360 ) angle -= 360;
     
 };
 
-Vector2 Player::calculateNextPos( ) {
-    Vector2 vector_helper;// vector used to scale himself if eg. W and D are pressed
-    if(IsKeyDown(KEY_RIGHT)==true && IsKeyDown(KEY_LEFT)==false){ // right rotation by deltaAngle
-        angle-=deltaAngle;
-    }
-    if(IsKeyDown(KEY_RIGHT)==false && IsKeyDown(KEY_LEFT)==true){//left rotation by deltaAngle
-        angle+=deltaAngle;
-    }
 
-    //*checking all the W,S,A,D states by force... and then calculating next position using "angle" variable.*//
+Vector2 Player::move( float dang ) {
+    Vector2 next;
+    
+    double theta = (angle + dang) * DEG2RAD;
+    next.x = position.x + step * cos(theta);
+    next.y = position.y + step * sin(theta);
 
-    if(IsKeyDown(KEY_W)==true){
+    position = next;
 
-    }
-
->>>>>>> e0dc471c851a5318144607a4015abc0343c79c61
+    return next;
 }
 
-void Player::move( Vector2 where ) {
-    return;
-}
+void Player::info() {
+    DrawText( TextFormat( "Pos: %04.04f /  %04.04f ", position.x , position.y ) , 0 , 0 , 20 , WHITE);
+    DrawText( TextFormat( "Angle: %03f", angle ) , 0 , 30 , 20 , WHITE);
 
-
-
+} 
 #endif

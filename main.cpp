@@ -1,5 +1,4 @@
 #include "include/raylib.h"
-#include "./src/constants.hpp"
 #include "./src/raycast.cpp"
 #include "./src/player.cpp"
 #include "./src/input.cpp"
@@ -16,6 +15,8 @@ int main(int argc, char* argv[])
     Player player = Player();
     Raycast raycast = Raycast( 1 );
 
+    raycast.graphics.LoadTextures();
+    
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -23,11 +24,12 @@ int main(int argc, char* argv[])
 
         BeginDrawing();
 
-        readInput( player );
-        raycast.resetScreen();
-        raycast.draw( player );
-
-        //DrawText("Sneeeeeeed", 400, 0, 40, LIGHTGRAY);
+            readInput( player );
+            raycast.resetScreen();
+            //raycast.drawMap( player );
+            raycast.draw( player );
+            
+            player.info();
 
         EndDrawing();
     }
@@ -38,3 +40,4 @@ int main(int argc, char* argv[])
 }
 
 // gcc main.c -o game.exe -O1 -Wall -std=c99 -Wno-missing-braces -I include/ -L lib/ -lraylib -lopengl32 -lgdi32 -lwinmm
+// clang -framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL -std=c++17 lib/libraylib.a main.cpp -o main
