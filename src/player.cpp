@@ -22,8 +22,8 @@ public:
 
 void Player::rotate( int dang ) {
     angle += deltaAngle * dang;
-    //if( angle < 0 ) angle += 360;
-    //if( angle >= 360 ) angle -= 360;
+    if( angle < 0 ) angle += 360;
+    if( angle >= 360 ) angle -= 360;
     
 };
 
@@ -41,8 +41,9 @@ Vector2 Player::move( float dang ) {
 }
 
 void Player::info() {
-    DrawText( TextFormat( "Pos: %04.04f /  %04.04f ", position.x , position.y ) , 0 , 0 , 20 , WHITE);
-    DrawText( TextFormat( "Angle: %03f", angle ) , 0 , 30 , 20 , WHITE);
+    DrawText( TextFormat( "Pos: %04.04f /  %04.04f ", position.x , position.y ) , 0 , 0 , 20 , WHITE );
+    DrawText( TextFormat( "Angle: %03f", angle ) , 0 , 30 , 20 , WHITE );
+    DrawText( TextFormat( "FPS: %i",GetFPS()) , 0 , 60 , 20 , WHITE );
 
 } 
 #endif

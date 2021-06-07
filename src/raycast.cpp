@@ -44,7 +44,7 @@ class Raycast
         Graphics graphics;
 
         Raycast( float scale); // constructor
-        void drawSegment( int x, int len , int type ); // draw 1 line on the screen
+        void drawSegment( int x, int len , int type , double part ); // draw 1 line on the screen
         void ray( int x , Player &player); // calculate segment
         void draw( Player &player );                                      // draw class that takes a player data
         void resetScreen( );                                              // draw a rectngle and clear the screen
@@ -61,8 +61,8 @@ Raycast::Raycast( float _scale ) {
     scale = _scale;
 }
 
-void Raycast::drawSegment( int x, int len , int type ) {
-    Color color = colors[type];
+void Raycast::drawSegment( int x, int len , int type , double part ) {
+    Color color = colors[type-1];
     // if( side ) {
     //     color.r /= 2;
     //     color.g /= 2;
@@ -70,7 +70,9 @@ void Raycast::drawSegment( int x, int len , int type ) {
     // }
     if( type < 6 ) DrawRectangle( x , SCREEN_HEIGHT/2 - len/2 , 1, len , color );
     else {
-
+        Rectangle rec = { (int)(graphics.textures[0].width*part) ,0,5,len};
+        Vector2 vec = {x , SCREEN_HEIGHT/2 - len/2};
+        DrawTextureRec( graphics.textures[0] , rec, vec , WHITE);
     }
 }
 
@@ -78,9 +80,10 @@ void Raycast::drawSegment( int x, int len , int type ) {
 void Raycast::ray( int i , Player &player ) {
     double x = player.position.x , y = player.position.y;
     int mapX = int(x) , mapY = int(y);
-    double theta = ( (double)player.angle + player.fov / 2 - player.fov * (double)(i) / (double)(SCREEN_WIDTH) ) * DEG2RAD;
-    double sinus = sin(theta) , cosinus = cos(theta);
 
+    double deltaAngle = player.fov * (double)(i) / (double)(SCREEN_WIDTH);
+    double theta = ( (double)player.angle + player.fov / 2 - deltaAngle ) * DEG2RAD;
+    double sinus = sin(theta) , cosinus = cos(theta);
     double deltaX = abs( 1 / cosinus ) , deltaY = abs(1 / sinus);
     //if( sinus == 0 ) deltaX = 0; if( cosinus == 0 ) deltaY = 0;
 
@@ -103,8 +106,7 @@ void Raycast::ray( int i , Player &player ) {
         distY = ( y - mapY ) * deltaY;
     }
 
-    bool hit = true , side = 0;
-    double dist;
+    bool hit = true , side = 0; // side of the block that has been hit ( its either left or right looking from casting position ).
     while( mapa[mapY][mapX] == 0 ) {
         // line in while causes raycasting to go black if rays are casted in a tile 
         if( distX < distY ) {
@@ -121,14 +123,16 @@ void Raycast::ray( int i , Player &player ) {
     }
 
     double perpWallDist;
-    if (side == 0) perpWallDist = (mapX - x + (1 - stepX) / 2) / cosinus;
-      else           perpWallDist = (mapY - y + (1 - stepY) / 2) / sinus;
-    double len = SCREEN_HEIGHT/ ( perpWallDist ) ;
 
-    //DrawLine( player.position.x*20 , player.position.y*20 , mapX*20 , mapY*20 , RED );
+    if( side == 0 ) perpWallDist = ( mapX-x - (stepX-1)/2 ) / cosinus;// / cosinus; // cos( ( player.angle + player.fov/2 - deltaAngle )*DEG2RAD );
+    else perpWallDist = ( mapY-y - (stepY-1)/2 ) / sinus ;// / sinus; // sin( ( player.angle + player.fov/2 - deltaAngle  )*DEG2RAD );
+    double len = SCREEN_HEIGHT / ( perpWallDist ) ;
+
+    double part;
+    if( side ) part = floor(x + perpWallDist * cosinus);
+    else part = floor(x + perpWallDist * sinus);
     
-    
-    drawSegment( i , len , mapa[mapY][mapX] );
+    drawSegment( i , len , mapa[mapY][mapX] , part );
 }
 
 
@@ -154,9 +158,9 @@ void Raycast::resetScreen() {
     //single color background
     ClearBackground( BLACK );
     
-    // duochromatic background
-    //DrawRectangle( 0 , 0 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , BLACK ); 
-    //DrawRectangle( 0 , SCREEN_HEIGHT / 2 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , GRAY );
+    //Duochromatic background
+    DrawRectangle( 0 , 0 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , BLACK ); 
+    DrawRectangle( 0 , SCREEN_HEIGHT / 2 , SCREEN_WIDTH , SCREEN_HEIGHT / 2 , GRAY );
     
     // Image background
     DrawTexture( graphics.images[0] , 0 , 0 , WHITE );

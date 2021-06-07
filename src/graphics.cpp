@@ -17,19 +17,37 @@ public:
 };
 
 void Graphics::LoadTextures() {
+    int imFiles = 1 , textFiles = 1;
     std::string imagesFiles[] = {
         "../img/skybox.png"
-        };
-    std::string texturesFiles[] = {};
+    };
+    std::string texturesFiles[] = {
+        "../img/wood.png"
+    };
 
     Image image;
     Texture2D texture;
-
-    image = LoadImage("../img/skybox.png");
+    
+    image = LoadImage("../img/wood.png");
     texture = LoadTextureFromImage( image );
 
-    images[0] =  texture ;
+    textures[ 0 ] = texture;
     UnloadImage( image );
+//     for( int i=0;i<imFiles;i++ ) {
+//         image = LoadImage( imagesFiles[i].c_str() );
+//         texture = LoadTextureFromImage( image );
+
+//         images[ i ] = texture;
+//         UnloadImage( image );
+//     }
+
+//     for( int i=0;i<textFiles;i++ ) {
+//         image = LoadImage( texturesFiles[i].c_str() );
+//         texture = LoadTextureFromImage( image );
+
+//         textures[ i ] = texture;
+//         UnloadImage( image );
+//     }
 }
 
 #endif
