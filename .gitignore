@@ -30,4 +30,9 @@
 *.exe
 *.out
 *.app
+
+lib/
+
 /lib/
+/cmake-build-debug/
+/lib/raylib/
