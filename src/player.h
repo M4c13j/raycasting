@@ -1,0 +1,5 @@
+#ifndef RAYCASTING_PLAYER_H
+#define RAYCASTING_PLAYER_H
+
+void nic();
+#endif //RAYCASTING_PLAYER_H

@@ -5,7 +5,7 @@ include(FetchContent)
 
 # # This is the main part:
 add_subdirectory(lib/raylib)
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} src/main.cpp src/player.cpp src/player.h src/render.cpp src/render.h)
 include_directories(include)
 target_link_libraries(${PROJECT_NAME} raylib)
 

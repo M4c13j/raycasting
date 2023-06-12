@@ -17,7 +17,7 @@ int main()
 
         const char* text = "OMG! IT WORKS!";
 
-        EndDrawing();;
+        EndDrawing();
     }
 
 
