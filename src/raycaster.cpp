@@ -6,11 +6,16 @@
 #include <string>
 #include <iostream>
 
+struct Hit{
+    float x,y; // hit position ( exact )
+    int mapX, mapY; // map cooridnates of hit;
+};
+
 class Raycaster {
 public:
     Vector2 speed = {0.065f, 0.065f};
     Vector2 pos = {7,11};
-    float rotSpeed = 2*PI / 75;
+    float rotSpeed =  2*PI / 100; // for now 60fps based
     float angle=PI/4 + 0.012412412412412; // angle in radians
     float fov = PI/2;
     int mapWidth = 24;
@@ -45,10 +50,11 @@ public:
     int atPos( Vector2 where ); // color at position given by vec2
     void setPos( float _x, float _y); // change position to given one
     void movePlayer(int dir); // we move in the direction we face ( angle ), dir is 1 - front, -1 - back
-    float rotatePlayer(float deltaAngle); // change a rotation by an amoutn
-    void readInput();
-    Vector2 castRay( double deltaAngle ); // returns grid cords of hit.
-    void drawMap();
+    float rotatePlayer(float deltaAngle); // change a rotation by an amount
+    void readInput(); // handle keyboard, mouse input
+    Hit castRay( double deltaAngle ); // returns grid cords of collision
+    void draw(); // draws a 2.5d raycasting
+    void drawMap(); // draws a map ( 2d projection )
 };
 
 Raycaster::Raycaster() {
@@ -82,13 +88,13 @@ float Raycaster::rotatePlayer(float deltaAngle) {
 }
 
 void Raycaster::readInput() {
-    if( IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) ) rotatePlayer( (-1)*rotSpeed );
-    if( IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D) ) rotatePlayer( rotSpeed );
+    if( IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) ) rotatePlayer( rotSpeed );
+    if( IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D) ) rotatePlayer( -rotSpeed );
     if( IsKeyDown(KEY_UP) || IsKeyDown(KEY_W) ) movePlayer(1);
     if( IsKeyDown(KEY_DOWN) || IsKeyDown(KEY_S) ) movePlayer(-1);
 }
 
-Vector2 Raycaster::castRay( double deltaAngle ) {
+Hit Raycaster::castRay( double deltaAngle ) {
     const double eps = 1e-20;
     double alpha = deltaAngle + angle;
     if( alpha >= 2*PI ) alpha -= 2*PI;
@@ -118,33 +124,49 @@ Vector2 Raycaster::castRay( double deltaAngle ) {
             distY += deltaRayY;
             axisX += deltaAxisX;
             last = 0;
-            std::cout << 1;
-//            DrawCircle( 30*axisX, 30*(pos.y+distY*sin(alpha)), 4, YELLOW);
         } else {
             distX += deltaRayX;
             axisY += deltaAxisY;
             last = 1;
-            std::cout << 0;
-//            DrawCircle( 30*(pos.x+distX*cos(alpha)), 30*axisY, 4, BLUE);
         }
-//        DrawRectangle(axisX*30+5, axisY*30+5, 20, 20, PURPLE);
+        // Draw "visited" squares by ray
+        // DrawRectangle(axisX*30+5, axisY*30+5, 20, 20, PURPLE);
     }
 
-    std::cout << "\n";
+    Hit ret;
+    ret.mapX = axisX;
+    ret.mapY = axisY;
 
+    // correctio if ray goes in negative coordinate ( any )
     axisX += deltaAxisX < 0 ? -deltaAxisX : 0;
     axisY += deltaAxisY < 0 ? -deltaAxisY : 0;
-    Vector2 p;
     if( !last ) {
-        p.x = axisX;
-        p.y = ((float)axisX-pos.x) * tan(alpha) + pos.y;
+        ret.x = axisX;
+        ret.y = ((float)axisX-pos.x) * tan(alpha) + pos.y;
 
     } else {
-        p.x = ((float)axisY-pos.y) / ( tan(alpha) == 0 ? eps : tan(alpha) ) + pos.x;
-        p.y = axisY;
+        ret.x = ((float)axisY-pos.y) / ( tan(alpha) == 0 ? eps : tan(alpha) ) + pos.x;
+        ret.y = axisY;
     }
 
-    return p;
+    return ret;
+}
+
+void Raycaster::draw() {
+    int screenWidth  = GetScreenWidth();
+    int screenHeight = GetScreenHeight();
+
+    Vector2 dir = {cos(angle), sin(angle)}; // plane parallel to direction of looking
+    for (int x = 0; x < screenWidth; x++) {
+        double rayAngle = fov/2 - (double)x * fov / (double)screenWidth;
+        auto ray = castRay(rayAngle);
+        Vector2 vectorToHit = {ray.x-pos.x, ray.y-pos.y};
+        double perpDist = vectorToHit.x * dir.x + vectorToHit.y * dir.y; // just dot prod, we dont divide because dir of lenght 1
+        perpDist = fabs(perpDist);
+        double lineHeight = screenHeight / perpDist;
+
+        DrawLine(x,screenHeight/2 - lineHeight/2, x, screenHeight/2 + lineHeight/2, colors[map[ray.mapY][ray.mapX]] );
+    }
 }
 
 void Raycaster::drawMap() {
@@ -159,12 +181,14 @@ void Raycaster::drawMap() {
     int px = pos.x * side, py = pos.y * side;
     DrawCircle( px, py, 5, WHITE);
     DrawLine( px, py, px+40*cos(angle), py+40*sin(angle), WHITE);
-    for(int i=0;i<30;i++) {
-        auto rayFromMe = castRay((float)(i)*PI/15);
-        DrawLine(px, py, int(rayFromMe.x * side), int(rayFromMe.y * side), PINK);
+    int numOfRays = 200;
+    for(int i=0;i<numOfRays;i++) {
+        auto rayFromMe = castRay(fov/2 - (float)i * fov/(float)numOfRays);
+        DrawLine(px, py, int(rayFromMe.x * side), int(rayFromMe.y * side), WHITE);
     }
 
     DrawText(TextFormat("Position: %04.04f %04.04f", pos.x, pos.y), 720,10,22, WHITE);
     DrawText(TextFormat("Angle: %04.04f ( %04.02f deg )", angle, (360*angle/(2*PI))), 720,30,22, WHITE);
 }
+
 #endif //RAYCASTING_RAYCASTER_H
