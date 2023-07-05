@@ -5,10 +5,13 @@
 #include <cmath>
 #include <string>
 #include <iostream>
+#include <vector>
 
 struct Hit{
     float x,y; // hit position ( exact )
+    float part;
     int mapX, mapY; // map cooridnates of hit;
+    bool side;
 };
 
 class Raycaster {
@@ -45,8 +48,10 @@ public:
             {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
             {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}};
     Color colors[7] = {GREEN,BLUE,YELLOW,RED,PINK,WHITE, WHITE}; // colors for map ( primitive textures )
+    std::vector<Texture> textures; // Textures stored in vram
 
     Raycaster();
+    void loadTextures(); // loading textures from files
     int atPos( Vector2 where ); // color at position given by vec2
     void setPos( float _x, float _y); // change position to given one
     void movePlayer(int dir); // we move in the direction we face ( angle ), dir is 1 - front, -1 - back
@@ -58,7 +63,20 @@ public:
 };
 
 Raycaster::Raycaster() {
-    return;
+    loadTextures();
+}
+
+void Raycaster::loadTextures() {
+    Image texMap = LoadImage("../assets/minecraft_old.png");
+    std::vector<int> ids = {1,2,4,6,7,16*1+9,16*1+0}; // ids to load, numbered from 0 to 256!
+    for( auto &i : ids ) {
+        Image texturePart = ImageFromImage(texMap, {16*(i%16),16*(i/16),16,16});
+        Texture temp = LoadTextureFromImage(texturePart);
+        textures.push_back( temp );
+//        std::cout << "text num " << i << ' ' <<  16*(i%16) << " " << 16*(i/16) << "\n";
+    }
+
+    UnloadImage(texMap);
 }
 
 int Raycaster::atPos(Vector2 where) {
@@ -102,11 +120,9 @@ Hit Raycaster::castRay( double deltaAngle ) {
 
     double deltaRayX = sin(alpha) == 0 ? eps : 1 / sin(alpha);
     double deltaRayY = cos(alpha) == 0 ? eps : 1 / cos(alpha);
+
     deltaRayX = fabs(deltaRayX);
     deltaRayY = fabs(deltaRayY);
-
-    double distX = 0;
-    double distY = 0;
 
     int axisX = int(pos.x);
     int axisY = int(pos.y);
@@ -114,7 +130,8 @@ Hit Raycaster::castRay( double deltaAngle ) {
     int deltaAxisY = sin(alpha) >= 0 ? 1 : -1;
 
     bool last;
-    double distToFirstX, distToFirstY;
+    double distX = 0;
+    double distY = 0;
     distX = deltaAxisY == 1 ? (float)axisY+1-pos.y : pos.y-(float)axisY; distX *= deltaRayX;
     distY = deltaAxisX  == 1 ? (float)axisX+1-pos.x : pos.x-(float)axisX; distY *= deltaRayY;
 
@@ -136,17 +153,19 @@ Hit Raycaster::castRay( double deltaAngle ) {
     Hit ret;
     ret.mapX = axisX;
     ret.mapY = axisY;
+    ret.side = last;
 
-    // correctio if ray goes in negative coordinate ( any )
+    // correct when ray goes in dir of negative coordinate ( any )
     axisX += deltaAxisX < 0 ? -deltaAxisX : 0;
     axisY += deltaAxisY < 0 ? -deltaAxisY : 0;
-    if( !last ) {
-        ret.x = axisX;
-        ret.y = ((float)axisX-pos.x) * tan(alpha) + pos.y;
-
-    } else {
+    if( last ) {
         ret.x = ((float)axisY-pos.y) / ( tan(alpha) == 0 ? eps : tan(alpha) ) + pos.x;
         ret.y = axisY;
+        ret.part = ret.x - floorf(ret.x);
+    } else {
+        ret.x = axisX;
+        ret.y = ((float)axisX-pos.x) * tan(alpha) + pos.y;
+        ret.part = ret.y - floorf(ret.y);
     }
 
     return ret;
@@ -165,8 +184,31 @@ void Raycaster::draw() {
         perpDist = fabs(perpDist);
         double lineHeight = screenHeight / perpDist;
 
-        DrawLine(x,screenHeight/2 - lineHeight/2, x, screenHeight/2 + lineHeight/2, colors[map[ray.mapY][ray.mapX]] );
+        Color col= colors[map[ray.mapY][ray.mapX]];
+        int startX = x, startY = screenHeight/2 - lineHeight/2;
+        int endX = x, endY = screenHeight/2 + lineHeight/2;
+
+//        Draw a blue part on the edge of every visible tile
+//        if( fabsf(ray.part-0.5) >= 0.5f - 1.0f / 32) {
+//            col = BLUE;
+//            col.a = ray.side ? 100 : 255;
+//            DrawLine(x,screenHeight/2 - lineHeight/2, x, screenHeight/2 + lineHeight/2, col );
+//            continue;
+//        }
+        int textureId = map[ray.mapY][ray.mapX];
+        int texSide = textures[textureId].width; // assuming they're square, cause they won`t be other shapes obviously
+        Rectangle source = {int(texSide*ray.part), 0, 1, texSide};
+        Rectangle dest = {x,startY, 1, lineHeight};
+        Color cols = WHITE;
+        cols.a = ray.side ? 100 : 255;
+        DrawTexturePro(textures[textureId], source, dest, {0,0}, 0.0f, cols);
     }
+
+    // Do textures work?
+//    for(int i=0;i<textures.size();i++) {
+//        DrawTexturePro(textures[i], {0,0,16,16}, {110*i,0,100,100}, {0,0}, 0.0f, WHITE);
+//    }
+
 }
 
 void Raycaster::drawMap() {
