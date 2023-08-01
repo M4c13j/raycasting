@@ -1,5 +1,4 @@
 #include <raylib.h>
-#include "player.cpp"
 #include "raycaster.cpp"
 
 constexpr auto SCREEN_WIDTH  = 1200;

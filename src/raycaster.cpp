@@ -2,8 +2,10 @@
 #define RAYCASTER_CPP
 
 #include "raylib.h"
+#include "btextures.cpp"
 #include <cmath>
 #include <string>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 
@@ -16,39 +18,17 @@ struct Hit{
 
 class Raycaster {
 public:
-    Vector2 speed = {0.065f, 0.065f};
     Vector2 pos = {7,11};
-    float rotSpeed =  2*PI / 100; // for now 60fps based
     float angle=PI/4 + 0.012412412412412; // angle in radians
-    float fov = PI/2;
-    int mapWidth = 24;
-    int mapHeight = 24;
-    int map[24][24] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,6,0,0,0,0,2,0,0,0,0,4,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,6,0,0,0,0,3,0,2,4,0,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,6,6,0,0,0,4,3,2,3,4,3,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,6,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
-            {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}};
+    const float fov = PI/2;
+    const int mapWidth = 24;
+    const int mapHeight = 24;
+    int map[24][24];
+    int floor[24][24];
+    int ceiling[24][24];
     Color colors[7] = {GREEN,BLUE,YELLOW,RED,PINK,WHITE, WHITE}; // colors for map ( primitive textures )
-    std::vector<Texture> textures; // Textures stored in vram
+    std::vector<BTexture> textures; // Textures stored in vram
+    Texture skyBox;
 
     Raycaster();
     void loadTextures(); // loading textures from files
@@ -58,24 +38,67 @@ public:
     float rotatePlayer(float deltaAngle); // change a rotation by an amount
     void readInput(); // handle keyboard, mouse input
     Hit castRay( double deltaAngle ); // returns grid cords of collision
+    void wallCasting(); // drawing walls
+    void floceilCasting(); // cast floor and even ceiling
     void draw(); // draws a 2.5d raycasting
     void drawMap(); // draws a map ( 2d projection )
 };
 
 Raycaster::Raycaster() {
+    int _map[24][24] = {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+                        {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                        {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                        {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,6,0,0,0,0,2,0,0,0,0,4,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,6,0,0,0,0,3,0,2,4,0,3,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,6,6,0,0,0,4,3,2,3,4,3,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,6,6,6,6,6,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},
+                         {1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1}};
+
+    for( int i=0;i<mapHeight;i++) {
+        for(int j=0;j<mapWidth;j++) {
+            map[i][j] = _map[i][j];
+            floor[i][j] = j&0;
+            ceiling[i][j] = j&1;
+        }
+    }
+
     loadTextures();
+
+
 }
 
 void Raycaster::loadTextures() {
     Image texMap = LoadImage("../assets/minecraft_old.png");
+    Image _skyBox = LoadImage("../assets/sky.png");
+    ImageResize( &_skyBox, GetScreenWidth(), GetScreenHeight());
+    skyBox = LoadTextureFromImage(_skyBox);
+
     std::vector<int> ids = {1,2,4,6,7,16*1+9,16*1+0}; // ids to load, numbered from 0 to 256!
     for( auto &i : ids ) {
         Image texturePart = ImageFromImage(texMap, {16*(i%16),16*(i/16),16,16});
-        Texture temp = LoadTextureFromImage(texturePart);
+        BTexture temp;
+        temp.loadFromImage( texturePart );
         textures.push_back( temp );
 //        std::cout << "text num " << i << ' ' <<  16*(i%16) << " " << 16*(i/16) << "\n";
     }
 
+    UnloadImage(_skyBox);
     UnloadImage(texMap);
 }
 
@@ -88,6 +111,7 @@ void Raycaster::setPos(float _x, float _y) {
 }
 
 void Raycaster::movePlayer(int dir) {
+    Vector2 speed = {0.065f, 0.065f};
     Vector2 newPos = pos;
     newPos.x += speed.x * cos(angle) * dir;
     newPos.y += speed.y * sin(angle) * dir;
@@ -106,6 +130,7 @@ float Raycaster::rotatePlayer(float deltaAngle) {
 }
 
 void Raycaster::readInput() {
+    float rotSpeed = GetFrameTime() * (PI/50) * 60; // deltaTime * UniversalRotationConstant / fpsPerfectForThatConstant ( fr bro )
     if( IsKeyDown(KEY_LEFT) || IsKeyDown(KEY_A) ) rotatePlayer( rotSpeed );
     if( IsKeyDown(KEY_RIGHT) || IsKeyDown(KEY_D) ) rotatePlayer( -rotSpeed );
     if( IsKeyDown(KEY_UP) || IsKeyDown(KEY_W) ) movePlayer(1);
@@ -171,22 +196,37 @@ Hit Raycaster::castRay( double deltaAngle ) {
     return ret;
 }
 
+
 void Raycaster::draw() {
     int screenWidth  = GetScreenWidth();
     int screenHeight = GetScreenHeight();
 
     Vector2 dir = {cos(angle), sin(angle)}; // plane parallel to direction of looking
+
+
+    // ========== SKYBOX ===========
+//    DrawTexture(skyBox, 0, 0, WHITE);
+    // ========= FLOOR & CEIL CASTING =========
+    int playerHeight = screenHeight/2;
+    for( int p = 1; p < playerHeight; p++ ) {
+        float rowDist = (float)playerHeight / (float)p;
+
+    }
+
+    // ========= WALL CASTING ================
     for (int x = 0; x < screenWidth; x++) {
         double rayAngle = fov/2 - (double)x * fov / (double)screenWidth;
         auto ray = castRay(rayAngle);
         Vector2 vectorToHit = {ray.x-pos.x, ray.y-pos.y};
+
         double perpDist = vectorToHit.x * dir.x + vectorToHit.y * dir.y; // just dot prod, we dont divide because dir of lenght 1
         perpDist = fabs(perpDist);
-        double lineHeight = screenHeight / perpDist;
 
-        Color col= colors[map[ray.mapY][ray.mapX]];
+        double lineHeight = screenHeight / perpDist;
         int startX = x, startY = screenHeight/2 - lineHeight/2;
         int endX = x, endY = screenHeight/2 + lineHeight/2;
+
+        Color col= colors[map[ray.mapY][ray.mapX]];
 
 //        Draw a blue part on the edge of every visible tile
 //        if( fabsf(ray.part-0.5) >= 0.5f - 1.0f / 32) {
@@ -197,17 +237,14 @@ void Raycaster::draw() {
 //        }
         int textureId = map[ray.mapY][ray.mapX];
         int texSide = textures[textureId].width; // assuming they're square, cause they won`t be other shapes obviously
+
         Rectangle source = {int(texSide*ray.part), 0, 1, texSide};
         Rectangle dest = {x,startY, 1, lineHeight};
+
         Color cols = WHITE;
         cols.a = ray.side ? 100 : 255;
         DrawTexturePro(textures[textureId], source, dest, {0,0}, 0.0f, cols);
     }
-
-    // Do textures work?
-//    for(int i=0;i<textures.size();i++) {
-//        DrawTexturePro(textures[i], {0,0,16,16}, {110*i,0,100,100}, {0,0}, 0.0f, WHITE);
-//    }
 
 }
 
