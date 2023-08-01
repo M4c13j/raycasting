@@ -30,3 +30,8 @@ int main()
     CloseWindow();
     return 0;
 }
+
+/*
+ * Huge thanks to:
+ * https://lodev.org/cgtutor/raycasting.html
+ */
