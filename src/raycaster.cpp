@@ -12,36 +12,38 @@
 struct Hit{
     float x,y; // hit position ( exact )
     float part;
-    int mapX, mapY; // map cooridnates of hit;
-    bool side;
+    int   mapX, mapY; // map cooridnates of hit;
+    bool  side;
 };
 
 class Raycaster {
 public:
-    Vector2 pos = {7,11};
-    float angle=PI/4 + 0.012412412412412; // angle in radians
-    const float fov = PI/2;
+    Vector2 pos = {7, 11};
+    float   angle = PI / 4 + 0.012412412412412; // angle in radians
+    const float fov = PI / 2;
     const int mapWidth = 24;
     const int mapHeight = 24;
     int map[24][24];
     int floor[24][24];
     int ceiling[24][24];
-    Color colors[7] = {GREEN,BLUE,YELLOW,RED,PINK,WHITE, WHITE}; // colors for map ( primitive textures )
+    std::vector<Color> colors;  // colors for map ( primitive textures )
     std::vector<BTexture> textures; // Textures stored in vram
     Texture skyBox;
 
     Raycaster();
+
     void loadTextures(); // loading textures from files
-    int atPos( Vector2 where ); // color at position given by vec2
-    void setPos( float _x, float _y); // change position to given one
+    int atPos(Vector2 where); // color at position given by vec2
+    void setPos(float _x, float _y); // change position to given one
     void movePlayer(int dir); // we move in the direction we face ( angle ), dir is 1 - front, -1 - back
     float rotatePlayer(float deltaAngle); // change a rotation by an amount
     void readInput(); // handle keyboard, mouse input
-    Hit castRay( double deltaAngle ); // returns grid cords of collision
+    Hit castRay(double deltaAngle); // returns grid cords of collision
     void wallCasting(); // drawing walls
     void floceilCasting(); // cast floor and even ceiling
     void draw(); // draws a 2.5d raycasting
     void drawMap(); // draws a map ( 2d projection )
+    void showDebug(); // show debug info on screen
 };
 
 Raycaster::Raycaster() {
@@ -73,10 +75,12 @@ Raycaster::Raycaster() {
     for( int i=0;i<mapHeight;i++) {
         for(int j=0;j<mapWidth;j++) {
             map[i][j] = _map[i][j];
-            floor[i][j] = j&0;
-            ceiling[i][j] = j&1;
+            floor[i][j] = (i*mapWidth+j)%2;
+            ceiling[i][j] = (i*mapWidth+j)%2;
         }
     }
+
+    colors = std::vector<Color>{GREEN, BLUE, YELLOW, RED, PINK, WHITE, WHITE};
 
     loadTextures();
 
@@ -90,12 +94,11 @@ void Raycaster::loadTextures() {
     skyBox = LoadTextureFromImage(_skyBox);
 
     std::vector<int> ids = {1,2,4,6,7,16*1+9,16*1+0}; // ids to load, numbered from 0 to 256!
-    for( auto &i : ids ) {
-        Image texturePart = ImageFromImage(texMap, {16*(i%16),16*(i/16),16,16});
+    for( int &i : ids ) {
+        Image texturePart = ImageFromImage(texMap, {(float)16*(i%16),(float)16*(i/16),16,16});
         BTexture temp;
         temp.loadFromImage( texturePart );
         textures.push_back( temp );
-//        std::cout << "text num " << i << ' ' <<  16*(i%16) << " " << 16*(i/16) << "\n";
     }
 
     UnloadImage(_skyBox);
@@ -196,7 +199,6 @@ Hit Raycaster::castRay( double deltaAngle ) {
     return ret;
 }
 
-
 void Raycaster::draw() {
     int screenWidth  = GetScreenWidth();
     int screenHeight = GetScreenHeight();
@@ -205,12 +207,48 @@ void Raycaster::draw() {
 
 
     // ========== SKYBOX ===========
-//    DrawTexture(skyBox, 0, 0, WHITE);
+    DrawTexture(skyBox, 0, 0, WHITE);
     // ========= FLOOR & CEIL CASTING =========
     int playerHeight = screenHeight/2;
-    for( int p = 1; p < playerHeight; p++ ) {
+    const float ufff = 1 / cos(fov/2);
+    bool sneed[1200]={0};
+    for( int p = screenHeight/2 - 1; p > 0 ; p-- ) {
         float rowDist = (float)playerHeight / (float)p;
+        Vector2 step;
+        Vector2 mpos = {pos.x,pos.y};
 
+        mpos.x += rowDist * cos(angle+fov/2) * ufff;
+        mpos.y += rowDist * sin(angle+fov/2) * ufff;
+
+        step.x = 2 * tan(fov/2)*rowDist*cos(PI/2 - angle); // multiplyinf by 2... took too long to find that shit
+        step.y = 2 * tan(fov/2)*rowDist*sin(PI/2 - angle)*(-1);
+        step.x /= screenWidth;
+        step.y /= screenWidth;
+        for(int x = 0; x < screenWidth ; x++ ) {
+            if( sneed[x] ) continue;
+            int px = int(mpos.x);
+            int py = int(mpos.y);
+//            if( map[py][px] != 0 ) {
+//                sneed[x] = 1;
+//                continue;
+//            }
+//            if( (px >= mapWidth) || (px < 0) || (py >= mapHeight) || (py < 0) ) continue;
+
+            int flexid = floor[py][px];
+            int ceilid = ceiling[py][px];
+            flexid = ceilid = 5;
+
+            int tx = (float)(textures[flexid].width) * (mpos.x - (float)px); //tx %= 16;
+            int ty = (float)(textures[flexid].height) * (mpos.y - (float)py); //ty %= 16;
+
+            mpos.x += step.x;
+            mpos.y += step.y;
+
+            DrawPixel(x, playerHeight+p, textures[flexid].pixel[ty][tx]);
+//            DrawRectangle(x,playerHeight+p,2,2,textures[flexid].pixel[ty][tx]);
+//            DrawPixel(x, playerHeight-p, textures[ceilid].pixel[ty][tx]);
+//            DrawPixel(30*mpos.x, 30*mpos.y, PINK);
+        }
     }
 
     // ========= WALL CASTING ================
@@ -228,24 +266,31 @@ void Raycaster::draw() {
 
         Color col= colors[map[ray.mapY][ray.mapX]];
 
-//        Draw a blue part on the edge of every visible tile
-//        if( fabsf(ray.part-0.5) >= 0.5f - 1.0f / 32) {
-//            col = BLUE;
-//            col.a = ray.side ? 100 : 255;
-//            DrawLine(x,screenHeight/2 - lineHeight/2, x, screenHeight/2 + lineHeight/2, col );
-//            continue;
-//        }
         int textureId = map[ray.mapY][ray.mapX];
         int texSide = textures[textureId].width; // assuming they're square, cause they won`t be other shapes obviously
-
+        int texPart = int(texSide*ray.part);
+        double pixelHeight =  lineHeight / texSide;
+        for(int p=0;p<texSide;p++) {
+            DrawLine(
+                    startX,
+                    startY + p*pixelHeight,
+                    endX,
+                    startY +(p+1)*pixelHeight,
+                    textures[textureId].pixel[texPart][p]
+                    );
+        }
+        /* drawing using raylib textures (bad)
         Rectangle source = {int(texSide*ray.part), 0, 1, texSide};
         Rectangle dest = {x,startY, 1, lineHeight};
 
         Color cols = WHITE;
         cols.a = ray.side ? 100 : 255;
-        DrawTexturePro(textures[textureId], source, dest, {0,0}, 0.0f, cols);
+        DrawTexturePro(textures[textureId], source, dest, {0,0}, 0.0f, cols);*/
     }
 
+//    DrawLine(pos.x*30,pos.y*30,(pos.x+30*cos(angle))*30, (pos.y+sin(angle)*30)*30, WHITE);
+//    DrawLine(pos.x*30,pos.y*30,(pos.x+30*cos(angle+fov/2))*30, (pos.y+sin(angle+fov/2)*30)*30, BLACK);
+//    DrawLine(pos.x*30,pos.y*30,(pos.x+30*cos(angle-fov/2))*30, (pos.y+sin(angle-fov/2)*30)*30, WHITE);
 }
 
 void Raycaster::drawMap() {
@@ -270,4 +315,10 @@ void Raycaster::drawMap() {
     DrawText(TextFormat("Angle: %04.04f ( %04.02f deg )", angle, (360*angle/(2*PI))), 720,30,22, WHITE);
 }
 
+
+void Raycaster::showDebug() {
+    DrawText(TextFormat("FPS: %i", GetFPS()), 3,10,22, WHITE); // fps
+    DrawText(TextFormat("dTime: %.5f", GetFrameTime()), 3,30,22, WHITE); // delta time
+    DrawText(TextFormat("mouse (x,y): (%i, %i) ", GetMouseX(), GetMouseY()), 3,50,22, WHITE); // mouse pos
+}
 #endif //RAYCASTING_RAYCASTER_H

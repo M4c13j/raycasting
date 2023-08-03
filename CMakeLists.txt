@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 project(Raycasting)
 
 include(FetchContent)
+set(CMAKE_CXX_FLAGS "-Wall -Wextra -O3")
 
 # # This is the main part:
 add_subdirectory(lib/raylib)

@@ -19,8 +19,8 @@ int main()
 
         if(IsKeyDown(KEY_M)) raycaster.drawMap();
         else raycaster.draw();
-        DrawText(TextFormat("FPS: %i", GetFPS()), 0,10,22, WHITE);
 
+//        raycaster.showDebug();
 
         EndDrawing();
     }

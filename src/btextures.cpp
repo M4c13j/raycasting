@@ -4,6 +4,8 @@
 #include <iostream>
 
 struct BTexture {
+    int width = 16;
+    int height = 16;
     Color pixel[16][16];
     void loadFromImage(Image &img); // MUST BE the same dimentions as pixel;
 };
